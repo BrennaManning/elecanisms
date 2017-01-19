@@ -22,4 +22,3 @@ int16_t main(void) {
         led_write(&led3, !sw_read(&sw3));
     }
 }
-
