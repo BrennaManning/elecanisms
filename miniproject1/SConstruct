@@ -23,7 +23,9 @@ env.Program('miniproject1', ['miniproject1.c',
                          '../lib/uart.c',
                          '../lib/ui.c',
                          '../lib/timer.c',
-                         '../lib/oc.c'
+                         '../lib/oc.c',
+                         '../lib/common.c',
+                         '../lib/spi.c'
                          ])
 env.Hex('miniproject1')
 env.List('miniproject1')

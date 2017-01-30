@@ -13,6 +13,7 @@
 #define GET_DUTY_MOTOR_FORWARD       2
 #define SET_DUTY_MOTOR_BACK          3
 #define GET_DUTY_MOTOR_BACK          4
+#define GET_ANGLE                    5
 
 _PIN *nCS1;
 WORD angle;
@@ -25,6 +26,7 @@ WORD angle;
 //            USB_error_flags |= 0x01;                    // set Request Error Flag
 //    }
 //}
+
 
 WORD enc_readReg(WORD address) {
     WORD cmd, result;
@@ -44,8 +46,11 @@ WORD enc_readReg(WORD address) {
 }
 
 
+
+
 void VendorRequests(void) {
     WORD temp;
+    WORD address;
 
     switch (USB_setup.bRequest) {
         case TOGGLE_LED1:
@@ -78,8 +83,15 @@ void VendorRequests(void) {
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;     
-
-
+        case GET_ANGLE:
+            address.w = 0x3fff;
+            angle = enc_readReg(address);
+            temp = angle;
+            BD[EP0IN].address[0] = temp.b[0];
+            BD[EP0IN].address[1] = temp.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;
 
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
@@ -100,24 +112,6 @@ void VendorRequestsOut(void) {
     }
 }
 
-WORD enc_readReg(WORD address) {
-    WORD cmd, result;
-    cmd.w = 0x4000|address.w; //set 2nd MSB to 1 for a read
-    cmd.w |= parity(cmd.w)<<15; //calculate even parity for
-
-    pin_clear(nCS1);
-    spi_transfer(&spi1, cmd.b[1]);
-    spi_transfer(&spi1, cmd.b[0]);
-    pin_set(nCS1);
-
-    pin_clear(nCS1);
-    result.b[1] = spi_transfer(&spi1, 0);
-    result.b[0] = spi_transfer(&spi1, 0);
-    pin_set(nCS1);
-    return result;
-}
-
-
 
 int16_t main(void) {
     init_clock();
@@ -125,13 +119,17 @@ int16_t main(void) {
     init_pin();
     init_ui();
     init_oc();
+    init_spi();
+    spi_open(&spi1, &D[1], &D[0], &D[2], 1e6, 0);
 
     //pin_read(&D[0]);  // AS5048A MOSI
     //pin_read(&D[1]);  // AS5048A MISO
 
     // send register address (2 bytes)
-    angle = enc_readReg(0x3fff);
+    WORD address;
+    address.w = 0x3fff;
 
+    //angle = enc_readReg(0x3fff);
 
     //oc_pwm(&oc1, &D[07], NULL, 10e3, 0x8000); // 50% duty cycle PWM to Motor 1 Forwards
     oc_pwm(&oc1, &D[7], NULL, 10e3, 0);
