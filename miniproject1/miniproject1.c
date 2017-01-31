@@ -16,6 +16,7 @@
 #define GET_ANGLE                    5
 
 _PIN *nCS1;
+
 WORD angle;
 
 
@@ -39,8 +40,8 @@ WORD enc_readReg(WORD address) {
     pin_set(nCS1);
 
     pin_clear(nCS1);
-    result.b[1] = spi_transfer(&spi1, 0);
-    result.b[0] = spi_transfer(&spi1, 0);
+    result.b[1] = spi_transfer(&spi1, 0x0000);
+    result.b[0] = spi_transfer(&spi1, 0x0000);
     pin_set(nCS1);
     return result;
 }
@@ -120,8 +121,14 @@ int16_t main(void) {
     init_ui();
     init_oc();
     init_spi();
+
+
+    nCS1 = &D[3];
+    pin_digitalOut(nCS1);
+    
     spi_open(&spi1, &D[1], &D[0], &D[2], 1e6, 0);
 
+    
     //pin_read(&D[0]);  // AS5048A MOSI
     //pin_read(&D[1]);  // AS5048A MISO
 
