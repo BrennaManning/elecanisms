@@ -33,6 +33,7 @@ class miniproject2:
         self.GET_DUTY_MOTOR_BACK =      4
         self.GET_ANGLE =                5
         self.GET_CURRENT =              6
+        self.SET_BEHAVIOR =             7
 
         self.dev = usb.core.find(idVendor = 0x6666, idProduct = 0x0003)
         if self.dev is None:
@@ -109,6 +110,13 @@ class miniproject2:
             current = int(ret[0])+int(ret[1])*256
             return current
 
+    def set_behavior(self, behavior):
+        try:
+            self.dev.ctrl_transfer(0x40, self.SET_BEHAVIOR, int(behavior))
+            print "setting behavior to ", behavior
+        except usb.core.USBError:
+            print "You goofed it real good with the bevavhavior setting thing."
+    
     def get_rolling_current(self):
         """ This function returns the rolling average of the last 10 current values. """
         self.currents.pop(0)
@@ -226,7 +234,6 @@ class miniproject2:
             self.set_duty_motor_back(0x0000)
             self.set_duty_motor_forward(0x0000)
 
-
     def virtual_spring_torque(self):
         """ This function creates a virtual spring with torque proportional to displacement"""
 
@@ -267,7 +274,6 @@ class miniproject2:
             self.set_duty_motor_forward(0x0000)
             self.set_duty_motor_back(0x0000)
 
-
     def bumpy(self):
         """ This function creates a virtual bumpy texture."""
         #old_angle = self.get_angle()
@@ -295,6 +301,7 @@ class miniproject2:
     def virtual_damper(self):
         """ This function creates a virtual damper. """
         pass
+
     
     
 
@@ -303,38 +310,5 @@ if __name__ == "__main__":
 
     mp = miniproject2()
     
-
-
-    while True:
-        #mp.bumpy()
-        #mp.virtual_spring()
-        #mp.set_duty_motor_forward(0xf000)
-        # sleep(5)
-        #mp.set_duty_motor_forward(0x15cc)
-        mp.virtual_spring_torque()
-        # mp.set_duty_motor_forward(0x8000)
-        #mp.set_duty_motor_forward(0x0000)
-
-        '''
-        for i in range(0x0000,0xffff):
-            mp.set_duty_motor_forward(i)
-            print mp.get_rolling_current()
-        print '-----------------CYCLE---------------------'
-        mp.set_duty_motor_forward(0x0000)
-        sleep(3)
-        '''
-
-
-        """mp.set_duty_motor_forward(0x8000)
-        #mp.set_duty_motor_back(0x0000)
-        for i in range(0,100):
-            sleep(.1)
-            print(mp.get_current())
-        mp.set_duty_motor_forward(0x0000)
-        # sleep(5)
-        for i in range(0,100):
-            sleep(.1)
-            print(mp.get_current())
-
-            """
-        #print mp.set_duty_motor_forward(0x8000)
+    mp.set_behavior(3);
+  
