@@ -69,6 +69,16 @@ class miniproject1:
                 angle_val += 16398
             return angle_val
 
+    def get_current(self):
+        print "hooray"
+        try:
+            ret = self.dev.ctrl_transfer(0xC0, self.GET_CURRENT, 0, 0, 2)
+        except:
+            usb.core.USBError:
+            print "Go straight to jail, do not pass go, do not collect $200"
+        else:
+            current = int(ret[0])+int(ret[1])*256
+            return current
 
     def angle_calibration(self):
         angle_calibration = {}
@@ -136,6 +146,8 @@ class miniproject1:
             dict_writer.writerows(angle_spindown_data)
 
 if __name__ == "__main__":
-    mp = miniproject1()
 
+    mp = miniproject1()
+    mp.get_current()
+    print "hello"
   

@@ -14,6 +14,7 @@
 #define SET_DUTY_MOTOR_BACK          3
 #define GET_DUTY_MOTOR_BACK          4
 #define GET_ANGLE                    5
+#define GET_CURRENT                  6
 
 _PIN *nCS1;
 
@@ -77,6 +78,7 @@ void VendorRequests(void) {
             BD[EP0IN].bytecount = 0;    // set EP0 IN byte count to 0
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
+
         case GET_DUTY_MOTOR_BACK:
             temp.w = pin_read(&D[8]);
             BD[EP0IN].address[0] = temp.b[0];
@@ -93,6 +95,14 @@ void VendorRequests(void) {
             BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
             BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
             break;
+        case GET_CURRENT:
+            temp.w = pin_read(&A[0]);
+            BD[EP0IN].address[0] = temp.b[0];
+            BD[EP0IN].address[1] = temp.b[1];
+            BD[EP0IN].bytecount = 2;    // set EP0 IN byte count to 2
+            BD[EP0IN].status = 0xC8;    // send packet as DATA1, set UOWN bit
+            break;  
+
 
         default:
             USB_error_flags |= 0x01;    // set Request Error Flag
