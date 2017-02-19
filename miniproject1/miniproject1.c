@@ -22,12 +22,6 @@ WORD angle;
 
 
 
-//void ClassRequests(void) {
-//    switch (USB_setup.bRequest) {
-//        default:
-//            USB_error_flags |= 0x01;                    // set Request Error Flag
-//    }
-//}
 
 
 WORD enc_readReg(WORD address) {
