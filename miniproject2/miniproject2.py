@@ -8,7 +8,7 @@ import time
 
 # Helper Functions
 def translate(value, leftMin, leftMax, rightMin, rightMax):
-    """ This helper function scales a value from one range of values to another.
+    """ This helper function scales a value from one range of values to another. It is used in our python spring implementation.
     Much thanks to Adam from stackoverflow:
     http://stackoverflow.com/questions/1969240/mapping-a-range-of-values-to-another/1969296 """
     
@@ -40,7 +40,7 @@ class miniproject2:
             raise ValueError('no USB device found matching idVendor = 0x6666 and idProduct = 0x0003')
         self.dev.set_configuration()
 
-        self.currents = [0] * 50
+        self.currents = [32500] * 10
 
     def close(self):
         """ This function disconnects from the USB device. """
@@ -114,6 +114,8 @@ class miniproject2:
         try:
             self.dev.ctrl_transfer(0x40, self.SET_BEHAVIOR, int(behavior))
             print "setting behavior to ", behavior
+            behaviors = {1: 'spring', 2: 'wall', 3: 'texture', 4: 'damper'}
+            print "Behavior = Virtual", behaviors[behavior]
         except usb.core.USBError:
             print "You goofed it real good with the bevavhavior setting thing."
     
@@ -302,13 +304,50 @@ class miniproject2:
         """ This function creates a virtual damper. """
         pass
 
+    def plot_angle_v_torque(self, title):
+        plot_data = []
+        print "plotting"
+        for i in range(0, 1000):
+            angle = self.get_angle()
+            torque_val = self.get_rolling_current()
+            plot_data.append({'angle': angle, 'torque': torque_val})
+            sleep(.01)  
+
+
+           
+        fp = '/home/brenna/courses/elecanisms/miniproject2/' + title + '.csv'
+        print plot_data
+        keys = plot_data[0].keys()
+        with open(title + '.csv', 'wb') as output_file:
+            dict_writer = csv.DictWriter(output_file, keys)
+            dict_writer.writeheader()
+            dict_writer.writerows(plot_data)
+
     
-    
+    def plot_omega_v_torque(self, title):
+        """This function saves a .csv file of torque and angular velocity over time."""
+        plot_data = []
+        previous_angle = 0
+        print "plotting"
+        for i in range(0, 100):
+            angle = self.get_angle()
+            omega = angle - previous_angle
+            torque_val = self.get_rolling_current()
+            plot_data.append({'omega': omega, 'torque': torque_val})
+            sleep(.1)  
+            previous_angle = angle
+
+           
+        fp = '/home/brenna/courses/elecanisms/miniproject2/' + title + '.csv'
+        print plot_data
+        keys = plot_data[0].keys()
+        with open(title + '.csv', 'wb') as output_file:
+            dict_writer = csv.DictWriter(output_file, keys)
+            dict_writer.writeheader()
+            dict_writer.writerows(plot_data)
 
 
 if __name__ == "__main__":
 
-    mp = miniproject2()
+    DISKO = miniproject2()
     
-    mp.set_behavior(3);
-  

@@ -18,31 +18,34 @@
 #define GET_CURRENT                  6
 #define SET_BEHAVIOR                 7
 
-_PIN *nCS1;
-WORD angle;
-int behavior = 0;
+
+// Some global variables.
+_PIN *nCS1; // nCS1 is a pin
+int behavior = 0; // Initial behavior is 0. (Does not correspond to motor commands.)
 
 
+// Function to read  from encoder.
 WORD enc_readReg(WORD address) {
     WORD cmd, result;
     cmd.w = 0x4000|address.w; //set 2nd MSB to 1 for a read
     cmd.w |= parity(cmd.w)<<15; //calculate even parity for
 
-    pin_clear(nCS1);
+    pin_clear(nCS1); // Set pin low before communicating over SPI
+    // Send address over SPI to communicate what information we want to get back.
     spi_transfer(&spi1, cmd.b[1]);
     spi_transfer(&spi1, cmd.b[0]);
-    pin_set(nCS1);
+    pin_set(nCS1); // Set pin high when transfer is complete.
 
-    pin_clear(nCS1);
-    result.b[1] = spi_transfer(&spi1, 0x0000);
+    pin_clear(nCS1); // Set pin low again before receiving information.
+    result.b[1] = spi_transfer(&spi1, 0x0000); // Send 0x0000 when you want to receive info rather than send it.
     result.b[0] = spi_transfer(&spi1, 0x0000);
-    pin_set(nCS1);
+    pin_set(nCS1); // Set pin high when transfer is complete.
     return result;
 }
 
 
 
-
+// VendorRequests to communicate over serial.
 void VendorRequests(void) {
     WORD temp;
     WORD address;
@@ -139,30 +142,27 @@ int16_t main(void) {
     pin_digitalOut(nCS1);
     pin_analogIn(&A[0]);
     
+    // Open SPI communication and specify important pins and parameters.
     spi_open(&spi1, &D[1], &D[0], &D[2], 1e6, 0);
 
     // send register address (2 bytes)
     WORD address;
-    address.w = 0x3fff;
-
-    WORD temp;
+    address.w = 0x3fff; // This is the address we read from to get the value of the angular position.
+    WORD temp; // Used in USB serial communication.
+    
+    // Initialize variables to 0
     int angle = 0;
     int previous_angle=0;
-    int current = 0; // angular velocity
-    int w=0;
+    int current = 0; 
+    int w=0; // angular velocity
 
     //TIMER FOR DAMPER
-
     timer_setPeriod(&timer2, 0.01);
     timer_start(&timer2);
 
-    //oc_pwm(&oc1, &D[07], NULL, 10e3, 0x8000); // 50% duty cycle PWM to Motor 1 Forwards
-    oc_pwm(&oc1, &D[7], NULL, 20e3, 0);
-    //oc_pwm(&oc1, &D[8], NULL, 10e3, 31E00); // 50% duty cycle PWM to Motor 1 Backwards
-    oc_pwm(&oc2, &D[8], NULL, 20e3, 0);
-
-    oc_pwm(&oc3, &led1, NULL, 20e3, 0);
-    oc_pwm(&oc4, &led2, NULL, 20e3, 0);
+    // OC PWM for motor duty
+    oc_pwm(&oc1, &D[7], NULL, 20e3, 0); // PWM to Motor 1 Forwards
+    oc_pwm(&oc2, &D[8], NULL, 20e3, 0); // PWM to Motor 1 Forwards
 
     InitUSB();                              // initialize the USB registers and serial interface engine
     while (USB_USWSTAT!=CONFIG_STATE) {     // while the peripheral is not configured...
@@ -170,8 +170,6 @@ int16_t main(void) {
     }
     while (1) {
         ServiceUSB();                       // service any pending USB requests
-
-     
         address.w = 0x3fff;
         temp = enc_readReg(address);
         angle = temp.b[0]+temp.b[1]*256;
@@ -180,14 +178,10 @@ int16_t main(void) {
             angle += 16398;
         }
 
-
-        switch (behavior){
-            
-            
+        // When the behavior is set using the python code, it changes which case is selected here.
+        switch (behavior){            
             case 1:
-            // VIRTUAL SPRING
-
-                
+            // VIRTUAL SPRING                
                 if (angle > 20000 && angle < 22000){
                     pin_write(&D[7], 0x0000);
                     pin_write(&D[8], (angle-20000)*20+0x3000);
@@ -227,8 +221,9 @@ int16_t main(void) {
                 }
 
                 previous_angle = angle;
-
+                
                 break;
+
             case 3:
             // VIRTUAL TEXTURE - CORRUGATED
 
@@ -254,7 +249,7 @@ int16_t main(void) {
                 break;
             
             case 4:
-            // VIRTUAL DAMPER
+            // VIRTUALDAMPER
                 
                 if (timer_flag(&timer2)) {
                     timer_lower(&timer2);
@@ -272,6 +267,7 @@ int16_t main(void) {
                     led_off(&led3);
                 }
                 else if (w > 0){
+                    // pin_write(&D[8], (0xf000+(w/300 *(0xffff-0x4000)) || 0x0000);
                     pin_write(&D[8], (w*400));
                     pin_write(&D[7], 0x0000);
                     led_on(&led1);
@@ -284,11 +280,7 @@ int16_t main(void) {
                     led_off(&led3);
                 }
                 break;
-
         }
-
-    }
-
-  
+    }  
 }
 
