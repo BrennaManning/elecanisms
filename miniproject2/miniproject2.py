@@ -298,13 +298,38 @@ class miniproject2:
 
     def virtual_wall(self):
         """ This function creates a virtual wall. """
-        pass
+        old_angle = self.get_angle()
+        sleep(.0001)
+        angle = self.get_angle()
+       
+        if angle > 22000 and old_angle < 22000:
+            self.set_duty_motor_back(0x0000)
+            self.set_duty_motor_forward(0xffff)
+
+        else if angle < 22000 and old_angle > 22000:
+            self.set_duty_motor_forward(0x0000)
+            self.set_duty_motor_back(0x0000)
+    
 
     def virtual_damper(self):
         """ This function creates a virtual damper. """
-        pass
+        kp = 6
+        old_angle = self.get_angle()
+        sleep(.001)
+        new_angle = self.get_angle()
+        w = new_angle - old_angle
+        if w <= 0:
+            self.set_duty_motor_forward(0x0000)
+            self.set_duty_motor_back(0x0000)
+        else:
+            self.set_duty_motor_forward(0x0000)
+            self.set_duty_motor_back(w*kp)
+
+         
 
     def plot_angle_v_torque(self, title):
+        """This function saves a .csv file of torque and angle over time."""
+       
         plot_data = []
         print "plotting"
         for i in range(0, 1000):
