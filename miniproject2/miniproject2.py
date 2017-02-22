@@ -111,6 +111,7 @@ class miniproject2:
             return current
 
     def set_behavior(self, behavior):
+        """ Change the behavior setting. Controls which simple mechanical concept is simulated."""
         try:
             self.dev.ctrl_transfer(0x40, self.SET_BEHAVIOR, int(behavior))
             print "setting behavior to ", behavior
@@ -183,8 +184,7 @@ class miniproject2:
             #print angl5e_val
             sleep(.01)
             previous_angle_val = angle_val_original
-           
-            i = i +1
+            i = i + 1
 
         keys = angle_spindown_data[0].keys()
         with open('angle_spindown.csv', 'wb') as output_file:
@@ -306,7 +306,7 @@ class miniproject2:
             self.set_duty_motor_back(0x0000)
             self.set_duty_motor_forward(0xffff)
 
-        else if angle < 22000 and old_angle > 22000:
+        elif angle < 22000 and old_angle > 22000:
             self.set_duty_motor_forward(0x0000)
             self.set_duty_motor_back(0x0000)
     
